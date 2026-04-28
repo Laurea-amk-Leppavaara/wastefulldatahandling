@@ -13,7 +13,8 @@ You are given a tiny program with a text-based user interface that stores and se
 1. Create a new repository for your team based on this template called "wastefulldatahandling". 
 2. Examine the main code (main.py) carefully and test different usage scenarios.
 3. Look for inefficient or wasteful patterns, such as nested loops and repeated sorting.
-4. Before making changes, observe performance, e.g. by counting loop iterations or using time.perf_counter() function.
-5. As soon as you find an inefficiency, create an Energy Efficiency Report as a GitHub issue.
-6. Try fixing as many inefficiencies as you can.  Please always make your code changes first to a new branch, then send a pull request to the main repository and merge the repositories.
-7. Make sure that all relevant code changes are merged into the main repository before submitting the assignment for review. See Canvas for instructions on how to submit.     
+5. Observe performance, e.g. by counting loop iterations or using time.perf_counter() function.
+6. Enter one GitHub issue for each found inefficiency. Describe the issue in detail.
+8. Fix inefficiencies in the code. You can use AI for suggestions, but you should understand your code.   
+   - Please always make your code changes first to a new branch, then send a pull request to the main repository and merge the repositories.
+   - Make sure that all relevant code changes are merged into the main repository before submitting the assignment for review. See Canvas for instructions on how to submit.     
