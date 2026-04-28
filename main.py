@@ -141,7 +141,6 @@ def count_total_grades():
 
     total = 0
 
-    # Inefficient: creates an unnecessary copied list
     copied_students = []
 
     for student in students:
@@ -182,7 +181,6 @@ def display_course_summary():
 def save_backup():
     students = load_students()
 
-    # Inefficient: converts to JSON string and then parses it back unnecessarily
     json_text = json.dumps(students)
     copied_students = json.loads(json_text)
 
