@@ -1,4 +1,4 @@
-# Security Vulnerabilities Reporting
+# Fixing inefficiences in code
 
 ## Learning goals
 
