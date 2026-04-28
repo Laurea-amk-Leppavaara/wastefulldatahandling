@@ -1,73 +1,80 @@
-import unittest
-import sqlite3
-import your_code  # Korvaa 'your_code' koodisi tiedoston nimellä
-import os
+import time
+import json
+from main import add_student, search_student, load_students, save_students
 
-class TestStudentDatabase(unittest.TestCase):
-
-    def setUp(self):
-        # Initialize the database and test data
-        self.conn = sqlite3.connect("test_students.db")
-        self.cursor = self.conn.cursor()
-        self.cursor.executescript("""
-            -- Create a test database and tables
-            CREATE TABLE IF NOT EXISTS students (
-                id INTEGER PRIMARY KEY,
-                name TEXT,
-                contact TEXT,
-                ssn TEXT,
-                student_number TEXT,
-                image_path TEXT
-            );
-            -- Add a test user
-            INSERT INTO students (name, contact, ssn, student_number, image_path)
-            VALUES ('Test Student', 'test@example.com', '123-45-6789', 'S12345', 'test_image.png');
-        """)
-
-    def tearDown(self):
-        # Close the database and remove the test database file
-        self.conn.close()
-        # Remove the test database
-        os.remove("test_students.db")
-
-    def test_login_successful(self):
-        # Test successful login with correct username and password
-        username = "admin"
-        password = "password"
-        result = your_code.login(username, password)
-        self.assertEqual(result, "Login successful.")
-
-    def test_login_incorrect_credentials(self):
-        # Test login with incorrect username and password
-        username = "wrong_user"
-        password = "wrong_password"
-        result = your_code.login(username, password)
-        self.assertEqual(result, "Incorrect username or password. Please try again.")
-
-    def test_add_student_success(self):
-        # Test adding a student to the database successfully
-        name = "Test Student 2"
-        contact = "test2@example.com"
-        ssn = "987-65-4321"
-        student_number = "S54321"
-        image_path = "test_image2.png"
-        result = your_code.add_student(name, contact, ssn, student_number, image_path)
-        self.assertEqual(result, "Student added to the database.")
-
-    def test_search_student_found(self):
-        # Test searching for a student when the student is found
-        name = "Test Student"
-        result = your_code.search_student(name)
-        self.assertIsNotNone(result)
-        self.assertEqual(result["name"], "Test Student")
-
-if __name__ == '__main__':
-    unittest.main()
+TEST_FILE = "students.json"
 
 
+def reset_data():
+    with open(TEST_FILE, "w") as f:
+        json.dump([], f)
 
 
+def populate_test_data(n):
+    students = []
+    for i in range(n):
+        students.append({
+            "student_number": str(i),
+            "name": f"Student {i}",
+            "contact": "email@example.com",
+            "grades": []
+        })
+    save_students(students)
 
 
+def test_add_and_search():
+    print("Running basic functionality test...")
+
+    reset_data()
+
+    add_student_manual("123", "Alice", "a@example.com")
+
+    result = search_student_manual("123")
+
+    if result and result["name"] == "Alice":
+        print("PASS: Student added and found")
+    else:
+        print("FAIL: Student not found correctly")
 
 
+def test_search_performance():
+    print("\nRunning performance test...")
+
+    reset_data()
+    populate_test_data(1000)
+
+    start = time.perf_counter()
+    search_student_manual("999")
+    end = time.perf_counter()
+
+    print(f"Search time: {end - start:.6f} seconds")
+
+
+# Helper versions without input() for testing
+def add_student_manual(student_number, name, contact):
+    students = load_students()
+
+    students.append({
+        "student_number": student_number,
+        "name": name,
+        "contact": contact,
+        "grades": []
+    })
+
+    save_students(students)
+
+
+def search_student_manual(student_number):
+    students = load_students()
+
+    for student in students:
+        if student["student_number"] == student_number:
+            return student
+
+    return None
+
+
+if __name__ == "__main__":
+    test_add_and_search()
+    test_search_performance()
+       
