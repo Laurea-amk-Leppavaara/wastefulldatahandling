@@ -16,10 +16,10 @@ You are given a tiny program with a text-based user interface, which stores and 
 ## Workflow actions
 
 1.  Examine the main code (main.py) carefully and test different usage scenarios.
-2.  
-3.  For finding issues that are more difficult to spot, search online for information about  "SQL injection" and "Directory Traversal".  
-4.  As soon as you find a security flaw, use GitHub to file a Security Vulnerability Report. Use this template as a basis of your vulnability report: [Vulnerability Report Templete by GitHub Security Lab] (https://github.com/github/securitylab/blob/main/docs/report-template.md).  The text-based report does not have mandatory fields, but you should provide as much information as possible.  It is particularly important to provide exact steps to reproduce the vulnerablity (in this case,  tested example code on how an attacker could use it).  There must be a separate report for each vulnerability found.
-5. If you still have time, try fixing some of the found security  vulnerabilities (or make other well-reasoned improvements to the code).  Please edit the code with Visual Studio Code and, preferably, also try out GitHup Copilot extension (btw, this can also help spot new security flaws). Please always make your code changes first to a new branch, then send pull request to the main repository and merge the repositories.
+2.  Look for inefficient or wasteful patterns, such as nested loops and repeated sorting.
+3.  Before making changes, observe performance, e.g. by counting loop iterations or using time.perf_counter() function.
+4.  As soon as you find an inefficiency, create an Energy Efficiency Report as a GitHub issue.
+5. Try fixing as many inefficiencies as you can.  Please always make your code changes first to a new branch, then send a pull request to the main repository and merge the repositories.
 6. Make sure that all relevant code changes are merged into the main repository before submitting the assigment for review. See Canvas for instructions on how to submit. 
     
 
