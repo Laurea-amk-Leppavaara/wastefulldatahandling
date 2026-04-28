@@ -1,195 +1,234 @@
-import sqlite3
+import json
 import os
+import time
 
-# Create an SQLite database
-conn = sqlite3.connect("students.db")
-cursor = conn.cursor()
+DATA_FILE = "students.json"
 
-# Create a database table for students with student_number as the primary key
-cursor.execute('''CREATE TABLE IF NOT EXISTS students (
-                    student_number TEXT PRIMARY KEY,
-                    name TEXT,
-                    contact TEXT,
-                    ssn TEXT,
-                    image_path TEXT
-                )''')
 
-# Create a database table for grades
-cursor.execute('''CREATE TABLE IF NOT EXISTS grades (
-                    id INTEGER PRIMARY KEY,
-                    student_id TEXT,
-                    course TEXT,
-                    grade TEXT,
-                    FOREIGN KEY (student_id) REFERENCES students (student_number)
-                )''')
+def create_data_file_if_missing():
+    if not os.path.exists(DATA_FILE):
+        with open(DATA_FILE, "w") as file:
+            json.dump([], file)
 
-# Create a database table for users and passwords
-cursor.execute('''CREATE TABLE IF NOT EXISTS users (
-                    id INTEGER PRIMARY KEY,
-                    username TEXT,
-                    password TEXT
-                )''')
 
-# Add a default username and password (note that this is just an example)
-cursor.execute("INSERT INTO users (username, password) VALUES (?, ?)", ("admin", "password"))
-conn.commit()
+def load_students():
+    with open(DATA_FILE, "r") as file:
+        return json.load(file)
 
-# Create a directory for storing images
-if not os.path.exists("images"):
-    os.mkdir("images")
 
-# Function for login
+def save_students(students):
+    with open(DATA_FILE, "w") as file:
+        json.dump(students, file, indent=4)
+
+
 def login():
+    username = "admin"
+    password = "password"
+
     while True:
-        username = input("Enter username: ")
-        password = input("Enter password: ")
-        
-        cursor.execute("SELECT * FROM users WHERE username = ? AND password = ?", (username, password))
-        user = cursor.fetchone()
-        
-        if user:
+        given_username = input("Enter username: ")
+        given_password = input("Enter password: ")
+
+        if given_username == username and given_password == password:
             print("Login successful.")
             break
         else:
             print("Incorrect username or password. Please try again.")
 
-# Function to add a student
+
 def add_student():
     student_number = input("Enter student number: ")
     name = input("Enter student name: ")
     contact = input("Enter student contact information: ")
-    ssn = input("Enter student SSN: ")
-    
-    image_path = input("Enter the image file name (e.g., student_card.png, press Enter to skip): ")
-    if image_path:
-        image_path = os.path.join("images", image_path)
-        if not os.path.exists(image_path):
-            print("Image file not found. Student added without an image.")
-            image_path = None
-    
-    cursor.execute("INSERT INTO students (student_number, name, contact, ssn, image_path) VALUES (?, ?, ?, ?, ?)",
-               (student_number, name, contact, ssn, image_path))
-    conn.commit()
-    print("Student added to the database.")
 
-# Function to add grades for a student
-def add_grades():
-    student_number = input("Enter the student number of the student to add grades for: ")
+    students = load_students()
+
+    duplicate_found = False
+    for student in students:
+        if student["student_number"] == student_number:
+            duplicate_found = True
+
+    if duplicate_found:
+        print("Student number already exists.")
+        return
+
+    new_student = {
+        "student_number": student_number,
+        "name": name,
+        "contact": contact,
+        "grades": []
+    }
+
+    students.append(new_student)
+    save_students(students)
+
+    print("Student added.")
+
+
+def add_grade():
+    student_number = input("Enter student number: ")
     course = input("Enter course name: ")
-    grade = input("Enter the grade: ")
-    
-    cursor.execute("SELECT student_number FROM students WHERE student_number = ?", (student_number,))
-    student_id = cursor.fetchone()
-    
-    if student_id:
-        cursor.execute("INSERT INTO grades (student_id, course, grade) VALUES (?, ?, ?)",
-                       (student_number, course, grade))
-        conn.commit()
-        print("Grade added successfully.")
+    grade = input("Enter grade: ")
+
+    students = load_students()
+
+    student_found = False
+
+    for a student in students:
+        if student["student_number"] == student_number:
+            student["grades"].append({
+                "course": course,
+                "grade": grade
+            })
+            student_found = True
+
+    if student_found:
+        save_students(students)
+        print("Grade added.")
     else:
         print("Student not found.")
 
-# Function to search for a student by student number
+
 def search_student():
-    student_number = input("Enter the student number of the student to search for: ")
-    
-    cursor.execute("SELECT * FROM students WHERE student_number = ?", (student_number,))
-    student = cursor.fetchone()
-    
-    if student:
+    student_number = input("Enter student number to search for: ")
+
+    start_time = time.perf_counter()
+
+    students = load_students()
+
+    found_student = None
+
+    for student in students:
+        if student["student_number"] == student_number:
+            found_student = student
+
+    end_time = time.perf_counter()
+
+    if found_student:
         print("Student found:")
-        print(f"Student Number: {student[0]}")
-        print(f"Name: {student[1]}")
-        print(f"Contact: {student[2]}")
-        print(f"SSN: {student[3]}")
-        print(f"Image Path: {student[4]}")
+        print(f"Student Number: {found_student['student_number']}")
+        print(f"Name: {found_student['name']}")
+        print(f"Contact: {found_student['contact']}")
+        print(f"Grades: {found_student['grades']}")
     else:
         print("Student not found.")
 
-# Function to display all students
+    print(f"Search took {end_time - start_time:.6f} seconds.")
+
+
 def display_all_students():
-    cursor.execute("SELECT * FROM students")
-    students = cursor.fetchall()
-    
-    if students:
-        print("All students:")
+    students = load_students()
+
+    if not students:
+        print("No students found.")
+        return
+
+    print("All students:")
+
+    for i in range(len(students)):
+        sorted_students = sorted(students, key=lambda student: student["name"])
+        student = sorted_students[i]
+
+        print(f"Student Number: {student['student_number']}")
+        print(f"Name: {student['name']}")
+        print(f"Contact: {student['contact']}")
+        print(f"Grades: {student['grades']}")
+        print()
+
+
+def count_total_grades():
+    students = load_students()
+
+    total = 0
+
+    # Inefficient: creates an unnecessary copied list
+    copied_students = []
+
+    for student in students:
+        copied_students.append(student)
+
+    for student in copied_students:
+        for grade in student["grades"]:
+            total += 1
+
+    print(f"Total number of grades: {total}")
+
+
+def display_course_summary():
+    students = load_students()
+
+    all_courses = []
+
+    # Inefficient: builds a course list using repeated membership checks
+    for student in students:
+        for grade in student["grades"]:
+            if grade["course"] not in all_courses:
+                all_courses.append(grade["course"])
+
+    print("Course summary:")
+
+    # Inefficient: nested loops repeatedly scan all students and grades
+    for course in all_courses:
+        count = 0
+
         for student in students:
-            print(f"Student Number: {student[0]}")
-            print(f"Name: {student[1]}")
-            print(f"Contact: {student[2]}")
-            print(f"SSN: {student[3]}")
-            print(f"Image Path: {student[4]}")
-            print()
-    else:
-        print("No students in the database.")
+            for grade in student["grades"]:
+                if grade["course"] == course:
+                    count += 1
 
-# Function to upload an image
-def upload_image():
-    student_number = input("Enter the student number (image will be associated with this student): ")
-    image_file = input("Enter the image file name (e.g., student_card.png): ")
-    
-    image_path = os.path.join("images", image_file)
-    
-    if os.path.exists(image_path):
-        cursor.execute("UPDATE students SET image_path = ? WHERE student_number = ?", (image_path, student_number))
-        conn.commit()
-        print("Image uploaded and associated with the student.")
-    else:
-        print("Image file not found.")
+        print(f"{course}: {count} grade(s)")
 
-# Function to download a student's image
-def download_student_image():
-    student_number = input("Enter the student number of the student whose image you want to download: ")
-    
-    cursor.execute("SELECT image_path FROM students WHERE student_number = ?", (student_number,))
-    image_path = cursor.fetchone()
-    
-    if image_path:
-        image_path = image_path[0]
-        if os.path.exists(image_path):
-            with open(image_path, "rb") as f:
-                image_data = f.read()
-            new_image_name = input("Enter a new file name for the image (e.g., downloaded_image.png): ")
-            with open(new_image_name, "wb") as f:
-                f.write(image_data)
-            print(f"Image downloaded as '{new_image_name}'.")
-        else:
-            print("Image not found on the server.")
-    else:
-        print("Student not found.")
 
-# Main method
+def save_backup():
+    students = load_students()
+
+    # Inefficient: converts to JSON string and then parses it back unnecessarily
+    json_text = json.dumps(students)
+    copied_students = json.loads(json_text)
+
+    with open("students_backup.json", "w") as file:
+        json.dump(copied_students, file, indent=4)
+
+    print("Backup saved.")
+
+
 def main():
-    login()  # Login
+    create_data_file_if_missing()
+    login()
+
     while True:
         print("\nSelect an action:")
         print("1. Add a student")
-        print("2. Add grades for a student")
-        print("3. Search for a student by student number")
+        print("2. Add grade")
+        print("3. Search for student")
         print("4. Display all students")
-        print("5. Upload an image for a student")
-        print("6. Download a student's image")
-        print("7. Exit")
-        
-        choice = input("Enter your choice (1/2/3/4/5/6/7): ")
-        
+        print("5. Count total grades")
+        print("6. Display course summary")
+        print("7. Save backup")
+        print("8. Exit")
+
+        choice = input("Enter your choice: ")
+
         if choice == "1":
             add_student()
         elif choice == "2":
-            add_grades()
+            add_grade()
         elif choice == "3":
             search_student()
         elif choice == "4":
             display_all_students()
         elif choice == "5":
-            upload_image()
+            count_total_grades()
         elif choice == "6":
-            download_student_image()
+            display_course_summary()
         elif choice == "7":
+            save_backup()
+        elif choice == "8":
+            print("Goodbye.")
             break
+        else:
+            print("Invalid choice.")
+
 
 if __name__ == "__main__":
     main()
-
-# Close the database connection
-conn.close()
